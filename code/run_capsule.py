@@ -28,9 +28,8 @@ def main() -> int:
                     help="Existing model dir; provides the feature-column list at import.")
     ap.add_argument("--output_dir", default="/root/capsule/results")
     ap.add_argument("--subjects", default="",
-                    help="Comma/space-separated subject ids; empty = all 6 benchmark subjects.")
-    ap.add_argument("--experiment_name", default=os.environ.get("CO_CAPSULE_ID", "roi_quality"))
-    ap.add_argument("--mlflow_uri", default=os.environ.get("MLFLOW_TRACKING_URI", ""))
+                    help="Comma/space-separated subject ids; empty = all subjects.")
+    ap.add_argument("--experiment_name", default=os.environ.get("CO_CAPSULE_ID", "3d-hcr-roi-quality"))
     args = ap.parse_args()
 
     out = Path(args.output_dir); out.mkdir(parents=True, exist_ok=True)
