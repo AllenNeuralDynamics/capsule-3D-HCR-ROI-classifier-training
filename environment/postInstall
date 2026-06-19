@@ -3,5 +3,5 @@ set -euxo pipefail
 # Install the ROI-quality package (provides `roi-classifier train` + the feature-column
 # list / model API). Its pyproject pins the runtime deps.
 cd /
-git clone https://github.com/AllenNeuralDynamics/mfish-roi-classifier
+git clone https://github.com/jkim0731/mfish-roi-classifier
 cd /mfish-roi-classifier && pip install -e .

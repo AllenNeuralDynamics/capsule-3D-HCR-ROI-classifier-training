@@ -2,7 +2,7 @@
 
 Reproducible-run CodeOcean capsule that **retrains** the HCR ROI-quality classifier and
 logs the run to **MLflow**. Uses `model.train_embedded` from
-[`mfish-roi-classifier`](https://github.com/AllenNeuralDynamics/mfish-roi-classifier).
+[`mfish-roi-classifier`](https://github.com/jkim0731/mfish-roi-classifier).
 Scaffold mimics `mlflow_template`.
 
 ## Self-contained: labels asset only
