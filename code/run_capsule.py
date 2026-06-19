@@ -162,14 +162,26 @@ def main() -> int:
             mlflow.set_tags({"n_total_labels": n_total_labels,
                              "n_label_batches": len(label_files),
                              "model_kind": "lightgbm_roi_quality"})
-            # Log the model files as artifacts under 'model/' so the run is registrable from
-            # the MLflow UI (the same files are also in /results for a result data asset).
-            for fn in ("roi_quality_binary.txt", "roi_quality_4class.txt", "roi_quality_meta.json"):
-                p = out / fn
-                if p.exists():
-                    mlflow.log_artifact(str(p), artifact_path="model")
+            # Log a real MLflow MODEL (not just file artifacts) so it appears under the
+            # run's mlflow/ folder and is registrable in the Code Ocean Models dashboard.
+            # A pyfunc bundles BOTH boosters + the schema into one self-contained model.
+            import pandas as pd
+            import roi_quality_pyfunc
+            input_example = pd.DataFrame([{c: 0.0 for c in meta["feature_columns"]}])
+            mlflow.pyfunc.log_model(
+                artifact_path="model",
+                python_model=roi_quality_pyfunc.ROIQualityModel(),
+                artifacts={
+                    "binary_model": str(out / "roi_quality_binary.txt"),
+                    "four_class_model": str(out / "roi_quality_4class.txt"),
+                    "meta": str(out / "roi_quality_meta.json"),
+                },
+                code_paths=[str(Path(__file__).parent / "roi_quality_pyfunc.py")],
+                input_example=input_example,
+                pip_requirements=["lightgbm", "pandas", "numpy"],
+            )
             print(f"[mlflow] logged run: {n_total_labels} label event(s) across "
-                  f"{len(label_files)} batch(es); model artifacts under 'model/'.", flush=True)
+                  f"{len(label_files)} batch(es); pyfunc model under 'model/'.", flush=True)
     except Exception as e:  # noqa: BLE001
         print(f"[mlflow] skipped/failed ({e}); model + meta are in {out}.", flush=True)
     return 0
