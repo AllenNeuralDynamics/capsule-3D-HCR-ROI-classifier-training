@@ -6,19 +6,10 @@
 			"id": "Lb9TrainLBL00001",
 			"name": "label_assets",
 			"param_name": "label_assets",
-			"description": "Directory of per-session *.jsonl label assets (merged newest-wins)",
+			"description": "Directory of per-session *.jsonl label assets (merged newest-wins; embedded features)",
 			"type": "text",
 			"value_type": "string",
 			"default_value": "/root/capsule/data/labels"
-		},
-		{
-			"id": "Ft8TrainFEAT0002",
-			"name": "features_dir",
-			"param_name": "features_dir",
-			"description": "Directory with {sid}_features_all.parquet (the features asset)",
-			"type": "text",
-			"value_type": "string",
-			"default_value": "/root/capsule/data/features"
 		},
 		{
 			"id": "Sj4TrainSUBJ0003",
