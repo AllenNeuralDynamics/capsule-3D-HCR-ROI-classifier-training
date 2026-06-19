@@ -88,8 +88,6 @@ def main() -> int:
     ap = argparse.ArgumentParser(
         description="Retrain HCR ROI-quality classifier from embedded label features; log to MLflow.")
     ap.add_argument("--output_dir", default="/root/capsule/results")
-    ap.add_argument("--subjects", default="",
-                    help="Comma/space-separated subject ids; empty = all subjects.")
     args = ap.parse_args()
 
     out = Path(args.output_dir); out.mkdir(parents=True, exist_ok=True)
