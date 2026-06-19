@@ -3,15 +3,6 @@
 	"named_parameters": true,
 	"parameters": [
 		{
-			"id": "Lb9TrainLBL00001",
-			"name": "label_assets",
-			"param_name": "label_assets",
-			"description": "Directory of per-session *.jsonl label assets (merged newest-wins; embedded features)",
-			"type": "text",
-			"value_type": "string",
-			"default_value": "/root/capsule/data/labels"
-		},
-		{
 			"id": "Sj4TrainSUBJ0003",
 			"name": "subjects",
 			"param_name": "subjects",
@@ -19,15 +10,6 @@
 			"type": "text",
 			"value_type": "string",
 			"default_value": ""
-		},
-		{
-			"id": "Ex2TrainEXP00004",
-			"name": "experiment_name",
-			"param_name": "experiment_name",
-			"description": "MLflow experiment name suffix (default: capsule id)",
-			"type": "text",
-			"value_type": "string",
-			"default_value": "roi_quality"
 		}
 	]
 }
