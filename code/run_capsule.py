@@ -8,7 +8,8 @@ metrics and logs the run to MLflow.
 Input: attach one or more label data assets (each a per-session *.jsonl set). They are
 auto-discovered under the data root and merged newest-wins — no path argument; attach as
 many as you like. Each label carries segmentation_asset, code_commit, and the embedded
-feature values.
+feature values. The capsule has NO subject argument: it trains on every subject present
+in the labels (the subject list is read from the labels themselves).
 
 The feature schema is DERIVED from the labels themselves (every self-contained label
 embeds its features by name); a strict same-set check rejects a mixed label set. So
@@ -57,15 +58,16 @@ def _discover_label_dir() -> str:
     return str(stage)
 
 
-def _label_stats(label_dir: str, subjects: list[str]) -> tuple[list[Path], int, int]:
-    """Read the discovered label files for run-naming / provenance, counting only the
-    subjects this run trains on so both numbers describe the same run:
-    (files, label events for trained subjects, number of trained subjects present in the
-    labels). Both counts are read FROM the labels (sid ∩ trained subjects), not from the
-    static subject list."""
+def _scan_labels(label_dir: str, trainable: set[str]) -> tuple[list[Path], list[str], int]:
+    """Single pass over the discovered label files. Returns
+    (files, sorted subjects with >=1 trainable label, total label events).
+
+    The capsule has NO subject argument — it trains on every subject present in the
+    labels. The subject list is read FROM the labels here (distinct sids that carry a
+    trainable label, i.e. one of `trainable`; subjects with only `unsure`/`_undone_`
+    events are excluded so they don't create empty LOSO folds)."""
     d = Path(label_dir)
     files = sorted(d.glob("*.jsonl")) if d.is_dir() else [d]
-    trained = {str(s) for s in subjects}
     sids: set[str] = set()
     n_events = 0
     for p in files:
@@ -74,14 +76,14 @@ def _label_stats(label_dir: str, subjects: list[str]) -> tuple[list[Path], int, 
                 line = line.strip()
                 if not line:
                     continue
+                n_events += 1
                 try:
-                    sid = str(json.loads(line).get("sid"))
+                    rec = json.loads(line)
                 except Exception:  # noqa: BLE001
                     continue
-                if sid in trained:
-                    sids.add(sid)
-                    n_events += 1
-    return files, n_events, len(sids)
+                if rec.get("label") in trainable:
+                    sids.add(str(rec.get("sid")))
+    return files, sorted(sids), n_events
 
 
 def main() -> int:
@@ -97,10 +99,16 @@ def main() -> int:
     os.environ["MFISH_MODELS_DIR"] = str(out)
 
     from roi_classifier import model
-    from roi_classifier.benchmark_data_loader import BENCHMARK_SUBJECTS
-    subjects = args.subjects.replace(",", " ").split() or list(BENCHMARK_SUBJECTS)
 
     label_dir = _discover_label_dir()
+    # Train on EVERY subject present in the labels — no subject argument. The subject list
+    # and counts are read from the labels themselves.
+    label_files, subjects, n_total_labels = _scan_labels(label_dir, set(model.CLASS_NAMES))
+    if not subjects:
+        raise SystemExit("[error] no trainable labels found in the attached label assets.")
+    print(f"[labels] {n_total_labels} label event(s) across {len(label_files)} file(s); "
+          f"training on {len(subjects)} subject(s): {', '.join(subjects)}", flush=True)
+
     meta = model.train_embedded(subjects=subjects, label_log_path=Path(label_dir), out_dir=out)
     b, f = meta["binary"], meta["four_class"]
     print(f"[train] {len(meta['feature_columns'])} feats | binary LOSO AUC={b['loso_mean_auc']:.4f} "
@@ -116,7 +124,7 @@ def main() -> int:
     # non-Release capsule) working — the model + meta are in /results regardless.
     try:
         import mlflow
-        label_files, n_total_labels, n_subjects = _label_stats(label_dir, subjects)
+        n_subjects = len(subjects)
         params = {"n_features": len(meta["feature_columns"]),
                   "n_subjects": n_subjects,
                   "subjects": ",".join(subjects),
