@@ -18,6 +18,13 @@ not borrow a schema from any vendored model — it *produces* the authoritative 
    `roi_quality_{binary,4class}.txt` + `roi_quality_meta.json` + per-subject OOF in `/results`.
 2. Logs params/metrics/model artifacts to MLflow.
 
+The **headline metric is the pooled out-of-fold (micro) AUC / f1_macro** — every held-out
+subject's predictions go into one pool, so it stays well-defined even when individual
+subjects have a single class or few labels (robust to uneven per-subject distributions).
+Per-subject LOSO means are kept as **diagnostics**, and degenerate folds (single-class eval
+→ undefined AUC, or `< 20` eval labels) are flagged in the log and meta
+(`loso_nan_auc_subjects`, `loso_low_n_subjects`, `loso_valid_auc_folds`).
+
 It **fails fast** if the labels' embedded feature sets disagree (a strict same-set check —
 they must all carry the identical feature names; a mismatch means mixed extractor versions,
 so re-extract + re-label). It **warns** (does not fail) on conflicting label values for the

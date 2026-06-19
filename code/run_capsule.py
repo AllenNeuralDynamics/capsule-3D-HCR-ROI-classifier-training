@@ -111,8 +111,12 @@ def main() -> int:
 
     meta = model.train_embedded(subjects=subjects, label_log_path=Path(label_dir), out_dir=out)
     b, f = meta["binary"], meta["four_class"]
-    print(f"[train] {len(meta['feature_columns'])} feats | binary LOSO AUC={b['loso_mean_auc']:.4f} "
-          f"| 4-class f1_macro={f['loso_mean_f1_macro']:.4f}", flush=True)
+    # Headline = pooled out-of-fold (micro) metric, robust to uneven per-subject label
+    # distributions. .get() falls back to the per-subject LOSO mean for older package metas.
+    bin_auc = b.get("oof_pooled_auc", b.get("loso_mean_auc", float("nan")))
+    mc_f1   = f.get("oof_pooled_f1_macro", f.get("loso_mean_f1_macro", float("nan")))
+    print(f"[train] {len(meta['feature_columns'])} feats | binary OOF AUC={bin_auc:.4f} "
+          f"| 4-class OOF f1_macro={mc_f1:.4f}", flush=True)
 
     # ---- MLflow tracking (Code Ocean NATIVE integration) ----
     # Enable "Track this Capsule" in Capsule Settings → MLflow tab. MLFLOW_TRACKING_URI is
@@ -137,12 +141,19 @@ def main() -> int:
         # counts are read from the labels, so they track each retraining iteration.
         with mlflow.start_run(run_name=f"roi_quality_{n_subjects}subj_{n_total_labels}labels"):
             mlflow.log_params(params)
+            _nan = float("nan")
             mlflow.log_metrics({
-                "binary_loso_auc": float(b["loso_mean_auc"]),
-                "binary_loso_ap": float(b.get("loso_mean_ap", float("nan"))),
-                "binary_loso_brier": float(b.get("loso_mean_brier", float("nan"))),
-                "fourclass_loso_f1_macro": float(f["loso_mean_f1_macro"]),
-                "fourclass_loso_acc": float(f.get("loso_mean_acc", float("nan"))),
+                # headline: pooled out-of-fold (micro) — robust to per-subject imbalance
+                "binary_oof_auc": float(b.get("oof_pooled_auc", b.get("loso_mean_auc", _nan))),
+                "binary_oof_ap": float(b.get("oof_pooled_ap", _nan)),
+                "binary_oof_brier": float(b.get("oof_pooled_brier", _nan)),
+                "fourclass_oof_f1_macro": float(f.get("oof_pooled_f1_macro", f.get("loso_mean_f1_macro", _nan))),
+                "fourclass_oof_acc": float(f.get("oof_pooled_acc", _nan)),
+                # diagnostics: per-subject LOSO means + fold validity
+                "binary_loso_mean_auc": float(b.get("loso_mean_auc", _nan)),
+                "fourclass_loso_mean_f1_macro": float(f.get("loso_mean_f1_macro", _nan)),
+                "loso_valid_auc_folds": float(b.get("loso_valid_auc_folds", _nan)),
+                "loso_n_folds": float(b.get("loso_n_folds", _nan)),
                 "binary_n_train": float(b["n_train_total"]),
                 "fourclass_n_train": float(f["n_train_total"]),
             })
