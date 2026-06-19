@@ -1,0 +1,9 @@
+{
+	"version": 1,
+	"attached_datasets": [
+		{
+			"id": "ed185c86-3f01-44f2-bc89-ab0e154f56d4",
+			"mount": "HCR-ROI-labeling_2026-06-19_10-38-00"
+		}
+	]
+}
