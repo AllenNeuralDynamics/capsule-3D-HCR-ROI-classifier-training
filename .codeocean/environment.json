@@ -1,0 +1,26 @@
+{
+	"version": 1,
+	"base_image": "codeocean/code-server-python-extensions-pack:v5.0",
+	"post_install": true,
+	"options": {
+		"registry_host_arg": true,
+		"git_ask_pass": true,
+		"mount_secrets": true
+	},
+	"installers": {
+		"pip": {
+			"packages": [
+				{
+					"name": "boto3",
+					"version": "1.43.33"
+				},
+				{
+					"name": "mlflow",
+					"version": "3.14.0"
+				}
+			],
+			"options": {},
+			"pre_install_options": {}
+		}
+	}
+}
