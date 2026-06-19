@@ -1,0 +1,12 @@
+metadata_version: 1
+name: Copy of MLFlow Example Model (Diabetes Experiment)
+description: |-
+  This is an example capsule to show the functionality of the MLFLow Orchestrator Capsule. It generates a model, logs parameters and results into the mlflow database and then syncs the results to S3. This capsule is based on the MLFlow tutorial found here:
+
+  https://github.com/mlflow/mlflow/tree/master/examples/sklearn_elasticnet_diabetes
+
+  This example trains an ElasticNet regression model for predicting diabetes progression.
+tags:
+- Machine Learning
+authors:
+- name: Emily So
