@@ -134,9 +134,9 @@ def main() -> int:
                   "subjects": ",".join(subjects),
                   "training": "embedded_features_no_base_model"}
         # str() the hyper-params: some (e.g. lgb 'metric') are lists, which not all
-        # MLflow versions accept as param values.
-        params.update({f"binary_{k}": str(v) for k, v in b["params"].items()})
-        params.update({f"fourclass_{k}": str(v) for k, v in f["params"].items()})
+        # MLflow versions accept as param values. Only the 4-class model has params now
+        # (binary keep is its derived marginal).
+        params.update({f"fourclass_{k}": str(v) for k, v in f.get("params", {}).items()})
         # run_name is just the human-readable label in the MLflow Experiments list. Both
         # counts are read from the labels, so they track each retraining iteration.
         with mlflow.start_run(run_name=f"roi_quality_{n_subjects}subj_{n_total_labels}labels"):
@@ -154,8 +154,7 @@ def main() -> int:
                 "fourclass_loso_mean_f1_macro": float(f.get("loso_mean_f1_macro", _nan)),
                 "loso_valid_auc_folds": float(b.get("loso_valid_auc_folds", _nan)),
                 "loso_n_folds": float(b.get("loso_n_folds", _nan)),
-                "binary_n_train": float(b["n_train_total"]),
-                "fourclass_n_train": float(f["n_train_total"]),
+                "n_train": float(f.get("n_train_total", _nan)),   # 4-class = the only model
             })
             # Label provenance for MLflow-UI readability (Code Ocean records the asset IDs
             # in the run lineage automatically; these tags are a convenience, not a need).
@@ -164,7 +163,7 @@ def main() -> int:
                              "model_kind": "lightgbm_roi_quality"})
             # Log a real MLflow MODEL (not just file artifacts) so it appears under the
             # run's mlflow/ folder and is registrable in the Code Ocean Models dashboard.
-            # A pyfunc bundles BOTH boosters + the schema into one self-contained model.
+            # A pyfunc bundles the 4-class booster + schema (binary keep is derived).
             import pandas as pd
             import roi_quality_pyfunc
             input_example = pd.DataFrame([{c: 0.0 for c in meta["feature_columns"]}])
@@ -172,7 +171,6 @@ def main() -> int:
                 artifact_path="model",
                 python_model=roi_quality_pyfunc.ROIQualityModel(),
                 artifacts={
-                    "binary_model": str(out / "roi_quality_binary.txt"),
                     "four_class_model": str(out / "roi_quality_4class.txt"),
                     "meta": str(out / "roi_quality_meta.json"),
                 },
