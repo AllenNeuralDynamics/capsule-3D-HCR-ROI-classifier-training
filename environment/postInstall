@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euxo pipefail
+
+# cache bust 260619-00
+
 # Install the ROI-quality package (provides `roi-classifier train` + the feature-column
 # list / model API). Its pyproject pins the runtime deps.
 cd /
