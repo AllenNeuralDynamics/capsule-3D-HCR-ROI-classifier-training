@@ -1,54 +1,34 @@
-[![Code Ocean Logo](images/CO_logo_135x72.png)](http://codeocean.com/product)
+# 3D HCR ROI-quality classifier training (capsule)
 
-<hr>
+Reproducible-run CodeOcean capsule that **retrains** the HCR ROI-quality classifier and
+logs the run to **MLflow**. Wraps `roi-classifier train` from
+[`mfish-roi-classifier`](https://github.com/AllenNeuralDynamics/mfish-roi-classifier).
+Scaffold mimics `mlflow_template`.
 
-# MLflow Example Model
+## Reproducible Run
+`code/run` → `code/run_capsule.py`:
+1. `roi-classifier train` on the merged label assets + the features asset
+   (LOSO CV + production fit) → writes `roi_quality_{binary,4class}.txt` +
+   `roi_quality_meta.json` + per-subject OOF to `/root/capsule/results`.
+2. Logs params (n_features, subjects, label/features asset paths), metrics
+   (binary LOSO AUC/AP, 4-class F1m/acc), and the model artifacts to MLflow.
 
-This capsule is intended to show the functionality of the MLflow Orchestrator Capsule. Multiple different capsules producing machine learning models can all update the same MLflow database and be viewed from the central "Orchestrator" capsule in an interactive cloud workstation. 
+### Parameters (`.codeocean/app-panel.json`)
+| param | meaning |
+|---|---|
+| `label_assets` | dir of per-session `*.jsonl` label assets (merged **newest-wins**) |
+| `features_dir` | dir with `{sid}_features_all.parquet` (the **features asset**, produced by the classifier capsule — **not** re-extracted here) |
+| `subjects` | comma/space-separated subject ids; empty = all 6 benchmark subjects |
+| `experiment_name` | MLflow experiment suffix |
 
-This example model is based on [the mlflow tutorial](https://github.com/mlflow/mlflow/tree/master/examples/sklearn_elasticnet_diabetes) which trains an ElasticNet regression model for predicting diabetes progression.
+### MLflow
+`run_capsule.py` logs via the standard MLflow API. **Finalize the tracking backend** for your
+CodeOcean MLflow setup (set `--mlflow_uri` / `MLFLOW_TRACKING_URI`, e.g. an S3/db URI like the
+`mlflow_template`). Without a URI it logs locally; if MLflow is unavailable the model + meta
+still land in `/results`.
 
-You will need to attach AWS Cloud Credentials as a secret in the environment of this capsule. These credentials must be able to both **Read** and **Write** to the S3 artifact bucket. In order to do this:
+### Promotion
+Promote a logged run to "Production" in the MLflow registry, then vendor that version back into
+`mfish-roi-classifier/models/` (release gate) so the classifier + labeling capsules pick it up.
 
-1. Go to the "Account" window and choose "User Secrets." Add one "AWS Cloud Credentials" secret: 
-
-![Account Secrets](images/account_secrets.png)
-
-2. Navigate to the "Files" tab and select "environment": 
-
-![Environment](images/environment.png)
-
-3. Attach the appropriate AWS credentials to the capsule: 
-
-![Secret Select](images/secret_select.png)
-
-This capsule performs the following steps
-
-1. MLflow searches for an experiment named `capsule_$CO_CAPSULE_ID` (`$CO_CAPSULE_ID` is based on the capsule id in metadata, see User Guide for more information on capsule environment variables.)
-
-2. If the experiment is found, add a new model version otherwise create the experiment and store the artifacts in the specified S3 bucket. 
-
-3. Generate model and use MLflow to log input parameters `alpha` and `l1_ratio` along with `RMSE` and other QC metrics
-
-This capsule is set up in order to remotely store artifacts and experiment information using S3. There are a number of different database backends and possible setups for MLflow, available in their documentation.
-
-## App Panel Parameters
-
-alpha
-- alpha parameter for ElasticNet model (from [sklearn.linear_model](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet.html#sklearn.linear_model.ElasticNet))
-
-l1_ratio
-- l1_ratio parameter for ElasticNet model
-
-Input Data
-- Input dataset of red wine data. Original found [here](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.load_diabetes.html)
-
-## Outputs
-
-**ElasticNet-paths.png** 
-- -Log(alpha) vs coefficients (example artifact) 
-
-<hr>
-
-[Code Ocean](https://codeocean.com/) is a cloud-based computational platform that aims to make it easy for researchers to share, discover, and run code.<br /><br />
-[![Code Ocean Logo](images/CO_logo_68x36.png)](https://www.codeocean.com)
+Part of the 3-capsule workflow: classifier (extract+infer) → labeling → **this (training)**.

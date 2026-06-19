@@ -1,12 +1,11 @@
 metadata_version: 1
-name: Copy of MLFlow Example Model (Diabetes Experiment)
-description: |-
-  This is an example capsule to show the functionality of the MLFLow Orchestrator Capsule. It generates a model, logs parameters and results into the mlflow database and then syncs the results to S3. This capsule is based on the MLFlow tutorial found here:
-
-  https://github.com/mlflow/mlflow/tree/master/examples/sklearn_elasticnet_diabetes
-
-  This example trains an ElasticNet regression model for predicting diabetes progression.
+name: 3D HCR ROI-quality classifier training
+description: "Retrain the 3-D HCR ROI-quality classifier (LightGBM binary + 4-class) on the
+  merged human label assets (per-session, newest-wins) using the attached features asset;
+  write the model + meta + LOSO metrics and log the run to MLflow."
 tags:
-- Machine Learning
+- 3D-HCR-ROI-classifier-training
+- mlflow
+- mfish
 authors:
-- name: Emily So
+- name: Jinho Kim
