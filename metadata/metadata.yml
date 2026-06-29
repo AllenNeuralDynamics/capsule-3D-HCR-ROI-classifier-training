@@ -1,8 +1,8 @@
 metadata_version: 1
-name: 3D HCR ROI-quality classifier training
-description: "Retrain the 3-D HCR ROI-quality classifier (LightGBM binary + 4-class) on the
-  merged human label assets (per-session, newest-wins) using the attached features asset;
-  write the model + meta + LOSO metrics and log the run to MLflow."
+name: 3D FISH ROI-quality classifier training
+description: Retrain the 3-D HCR ROI-quality classifier (LightGBM binary + 4-class)
+  on the merged human label assets (per-session, newest-wins) using the attached features
+  asset; write the model + meta + LOSO metrics and log the run to MLflow.
 tags:
 - 3D-HCR-ROI-classifier-training
 - mlflow
